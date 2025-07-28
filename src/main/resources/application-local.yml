@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: Kong-AI-Agent
+  ai:
+    dashscope:
+      api-key: "sk-583ddce453e0487fb25082eda7f2e0e9"
+      chat:
+        option:
+          model: qwen-plus
