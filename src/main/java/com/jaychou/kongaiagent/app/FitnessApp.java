@@ -1,12 +1,16 @@
 package com.jaychou.kongaiagent.app;
 
+import com.jaychou.kongaiagent.advisor.MyLoggerAdvisor;
 import com.jaychou.kongaiagent.chatmemory.FileBasedChatMemory;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -27,7 +31,8 @@ import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvis
 @Slf4j
 public class FitnessApp {
     private final ChatClient chatClient;
-
+    @Resource
+    private VectorStore fitnessAppVectorStore;
     private static final String SYSTEM_PROMPT =
             "扮演一位专业的私人健身教练，具备运动科学与营养知识。" +
                     "开场向用户表明身份，告知用户可以咨询任何与健身相关的问题，如增肌、减脂、塑形、体能提升等。" +
@@ -67,5 +72,24 @@ public class FitnessApp {
         log.info("fitnessReport: {}", fitnessReport); // 打印健身报告返回结果，便于调试
         return fitnessReport; // 返回生成的健身报告
     }
+
+
+    public String doChatWithRag(String message, String chatId) {
+        ChatResponse chatResponse = chatClient
+                .prompt()
+                .user(message)
+                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                // 开启日志，便于观察效果
+                .advisors(new MyLoggerAdvisor())
+                // 应用知识库问答
+                .advisors(new QuestionAnswerAdvisor(fitnessAppVectorStore))
+                .call()
+                .chatResponse();
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content: {}", content);
+        return content;
+    }
+
 
 }

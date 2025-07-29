@@ -47,5 +47,13 @@ class AppTest {
         FitnessApp.FitnessReport fitnessReport = fitnessApp.doChatWithReport(message, chatId);
         Assertions.assertNotNull(fitnessReport);
     }
+    @Test
+    void doChatWithRag() {
+        String chatId = UUID.randomUUID().toString();
+        String message = "我健身三个月了，但是效果一直不是很明显，怎么办？";
+        String answer =  fitnessApp.doChatWithRag(message, chatId);
+        Assertions.assertNotNull(answer);
+    }
+
 
 }
